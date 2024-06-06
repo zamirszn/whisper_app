@@ -4,14 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:whisper/globals.dart';
-import 'package:whisper/widgets/ripple_effect_widget.dart';
 
 class AudioRecorder extends StatefulWidget {
   final void Function(String path) onStop;
+  final void Function() onStart;
   final void Function(double amplitude) onAmplitudeChanged;
 
   const AudioRecorder(
-      {super.key, required this.onStop, required this.onAmplitudeChanged});
+      {super.key, required this.onStop, required this.onAmplitudeChanged, required this.onStart});
 
   @override
   State<AudioRecorder> createState() => _AudioRecorderState();
@@ -37,8 +37,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
         .onAmplitudeChanged(const Duration(milliseconds: 300))
         .listen(
       (amp) {
-        widget.onAmplitudeChanged(amp.current.abs());
-        _amplitude = amp.current.abs();
+        // widget.onAmplitudeChanged(amp.current.abs());
+        // _amplitude = amp.current.abs();
       },
     );
 
@@ -55,9 +55,6 @@ class _AudioRecorderState extends State<AudioRecorder> {
         if (kDebugMode) {
           print('${AudioEncoder.aacLc.name} supported: $isSupported');
         }
-
-        // final devs = await _audioRecorder.listInputDevices();
-        // final isRecording = await _audioRecorder.isRecording();
 
         await _audioRecorder.start();
         _recordDuration = 0;
@@ -96,106 +93,82 @@ class _AudioRecorderState extends State<AudioRecorder> {
   Widget build(BuildContext context) {
     final String minutes = _formatNumber(_recordDuration ~/ 60);
     final String seconds = _formatNumber(_recordDuration % 60);
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const SizedBox(
-              height: 200,
-            ),
-            RippleEffectWidget(
-              size: _amplitude ?? 0,
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 30),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    ClipOval(
-                      child: Material(
-                        color: _recordState != RecordState.stop
-                            ? Colors.red.withOpacity(0.1)
-                            : Theme.of(context).primaryColor.withOpacity(0.1),
-                        child: InkWell(
-                          child: SizedBox(
-                              width: 56,
-                              height: 56,
-                              child: _recordState != RecordState.stop
-                                  ? const Icon(Icons.stop,
-                                      color: Colors.red, size: 30)
-                                  : Icon(Icons.mic,
-                                      color: Theme.of(context).primaryColor,
-                                      size: 30)),
-                          onTap: () {
-                            (_recordState != RecordState.stop)
-                                ? _stop()
-                                : _start();
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    if (_recordState == RecordState.record)
-                      Row(
-                        children: [
-                          ClipOval(
-                            child: Material(
-                              color: Theme.of(context)
-                                  .primaryColor
-                                  .withOpacity(0.1),
-                              child: InkWell(
-                                child: const SizedBox(
-                                    width: 56,
-                                    height: 56,
-                                    child: Icon(Icons.pause,
-                                        color: Colors.red, size: 30)),
-                                onTap: () {
-                                  _pause();
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                        ],
-                      ),
-                    if (_recordState == RecordState.pause)
-                      Row(
-                        children: [
-                          ClipOval(
-                            child: Material(
-                              color: Theme.of(context)
-                                  .primaryColor
-                                  .withOpacity(0.1),
-                              child: InkWell(
-                                child: const SizedBox(
-                                    width: 56,
-                                    height: 56,
-                                    child: Icon(Icons.play_arrow,
-                                        color: Colors.green, size: 30)),
-                                onTap: () {
-                                  _resume();
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                        ],
-                      ),
-                    _recordState != RecordState.stop
-                        ? Text(
-                            '$minutes : $seconds',
-                            style: TextStyle(color: appColor1),
-                          )
-                        : const Text("Tap to speak"),
-                  ],
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          ClipOval(
+            child: Material(
+              color: _recordState != RecordState.stop
+                  ? Colors.red.withOpacity(0.1)
+                  : Theme.of(context).primaryColor.withOpacity(0.1),
+              child: InkWell(
+                child: SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: _recordState != RecordState.stop
+                        ? const Icon(Icons.stop, color: Colors.red, size: 30)
+                        : Icon(Icons.mic,
+                            color: Theme.of(context).primaryColor, size: 30)),
+                onTap: () {
+                  (_recordState != RecordState.stop) ? _stop() : _start();
+
+                  setState(() {});
+                },
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 20),
+          if (_recordState == RecordState.record)
+            Row(
+              children: [
+                ClipOval(
+                  child: Material(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    child: InkWell(
+                      child: const SizedBox(
+                          width: 56,
+                          height: 56,
+                          child:
+                              Icon(Icons.pause, color: Colors.red, size: 30)),
+                      onTap: () {
+                        _pause();
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+              ],
+            ),
+          if (_recordState == RecordState.pause)
+            Row(
+              children: [
+                ClipOval(
+                  child: Material(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    child: InkWell(
+                      child: const SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: Icon(Icons.play_arrow,
+                              color: Colors.green, size: 30)),
+                      onTap: () {
+                        _resume();
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+              ],
+            ),
+          _recordState != RecordState.stop
+              ? Text(
+                  '$minutes : $seconds',
+                  style: TextStyle(color: appColor1),
+                )
+              : const Text("Tap to speak"),
+        ],
       ),
     );
   }

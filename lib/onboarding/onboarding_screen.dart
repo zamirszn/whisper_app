@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whisper/globals.dart';
-import 'package:whisper/widgets/home_page.dart';
 import 'package:whisper/onboarding/liquid_card_swipe.dart';
 import 'package:whisper/onboarding/liquid_swipe_view.dart';
+import 'package:whisper/widgets/bottom_nav.dart';
+import 'package:whisper/widgets/voice_page.dart';
 
 class LiquidSwipeOnboarding extends StatefulWidget {
   const LiquidSwipeOnboarding({super.key});
@@ -36,13 +38,7 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
           LiquidSwipeCard(
             onTapName: () {},
             onSkip: () async {
-              final navigator = Navigator.of(context);
-
-              navigator.pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const HomePage(),
-                ),
-              );
+              goHome();
             },
             name: appName,
             action: "Skip",
@@ -65,13 +61,7 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
           LiquidSwipeCard(
             onTapName: () => liquidSwipeController?.previous(),
             onSkip: () async {
-              final navigator = Navigator.of(context);
-
-              navigator.pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const HomePage(),
-                ),
-              );
+              goHome();
             },
             name: "Back",
             action: "Done",
@@ -93,5 +83,19 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
         ],
       ),
     );
+  }
+
+  void goHome() async {
+    final navigator = Navigator.of(context);
+
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => const BottomNav(),
+      ),
+    );
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboardingDone', true);
+
+    
   }
 }

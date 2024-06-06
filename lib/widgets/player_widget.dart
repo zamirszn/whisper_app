@@ -5,7 +5,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggly_slider/slider.dart';
-import 'package:whisper/globals.dart';
 
 class PlayerWidget extends StatefulWidget {
   /// Path from where to play recorded audio
@@ -72,21 +71,33 @@ class PlayerWidgetState extends State<PlayerWidget> {
     Size deviceSize = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          _buildControl(),
-          _buildSlider(deviceSize.width / 1.2),
-          IconButton(
-            icon: Icon(Icons.delete, color: appColor1, size: _deleteBtnSize),
-            onPressed: () {
-              if (_audioPlayer.state == ap.PlayerState.playing) {
-                stop().then((value) => widget.onDelete());
-              } else {
-                widget.onDelete();
-              }
-            },
+      child: Column(
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              _buildControl(),
+              _buildSlider(deviceSize.width / 1.3),
+              ClipOval(
+                child: Material(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  child: InkWell(
+                    child: const SizedBox(
+                        width: _controlSize,
+                        height: _controlSize,
+                        child: Icon(Icons.refresh)),
+                    onTap: () {
+                      if (_audioPlayer.state == ap.PlayerState.playing) {
+                        stop().then((value) => widget.onDelete());
+                      } else {
+                        widget.onDelete();
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
