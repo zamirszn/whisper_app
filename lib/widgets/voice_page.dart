@@ -2,6 +2,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/services/api_response.dart';
+import 'package:whisper/services/database_helper.dart';
 import 'package:whisper/services/open_ai_service.dart';
 import 'package:whisper/widgets/audio_recorder_widget.dart';
 import 'package:whisper/widgets/fail_dialog.dart';
@@ -31,16 +32,6 @@ class _VoicePageState extends State<VoicePage> {
     super.initState();
   }
 
-  final GlobalKey<RipplesState> ripplesStateKey = GlobalKey<RipplesState>();
-
-  void changeAnimationSpeed(int duration) {
-    if (ripplesStateKey.currentState != null) {
-      ripplesStateKey.currentState!
-          .updateAnimationDuration(Duration(milliseconds: duration));
-    }
-  }
-
-  List<String> transcribedTexts = [];
   @override
   Widget build(BuildContext context) {
     Size deviceSize = MediaQuery.of(context).size;
@@ -71,11 +62,9 @@ class _VoicePageState extends State<VoicePage> {
             ),
           ),
           if (lastTranscribedText == null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Ripples(
-                key: ripplesStateKey,
-              ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Ripples(),
             ),
           if (lastTranscribedText != null)
             Padding(
@@ -87,7 +76,7 @@ class _VoicePageState extends State<VoicePage> {
                   child: SizedBox(
                     height: deviceSize.height / 2.3,
                     child: ListView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
+                      physics: const BouncingScrollPhysics(),
                       shrinkWrap: true,
                       itemCount: transcribedTexts.length,
                       itemBuilder: (context, index) {
@@ -177,6 +166,7 @@ class _VoicePageState extends State<VoicePage> {
       if (lastTranscribedText != null) {
         transcribedTexts.add(lastTranscribedText!);
       }
+      saveTranscription(text);
       setState(() {});
     } else if (response is Failure) {
       showFailDialog(context, response.message);
@@ -190,5 +180,9 @@ class _VoicePageState extends State<VoicePage> {
     if (response is Success) {
       showTextDialog(context, response.message ?? "");
     }
+  }
+
+  void saveTranscription(String text) async {
+    await databaseHelper.add(text);
   }
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dart_openai/dart_openai.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:whisper/globals.dart';
 import 'package:whisper/services/api_response.dart';
 
 Future<Object> sendAudio(String filePath) async {
@@ -25,9 +26,9 @@ Future<Object> sendAudio(String filePath) async {
 Future<Object> checkGrammer(String text) async {
   try {
     final completion = await OpenAI.instance.completion.create(
-      model: "gpt-3.5-turbo-instruct",
-      prompt: "Correct the grammar of the following: $text",
-    );
+        model: "gpt-3.5-turbo-instruct",
+        prompt: "Correct the grammar of the following: $text",
+        maxTokens: maxtoken);
 
     return Success(message: completion.choices.first.text.trim());
   } catch (e) {
@@ -38,9 +39,9 @@ Future<Object> checkGrammer(String text) async {
 Future<Object> summarizeConversation(String text) async {
   try {
     final completion = await OpenAI.instance.completion.create(
-      model: "gpt-3.5-turbo-instruct",
-      prompt: 'Summarize this text: $text',
-    );
+        model: "gpt-3.5-turbo-instruct",
+        prompt: 'Summarize this text: $text',
+        maxTokens: maxtoken);
 
     return Success(message: completion.choices.first.text.trim());
   } catch (e) {

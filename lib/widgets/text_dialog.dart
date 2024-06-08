@@ -5,12 +5,12 @@ void showTextDialog(BuildContext context, String? text) {
 
   showDialog(
     context: context,
-    builder: (context) => TextDailog(text: text),
+    builder: (context) => TextDialog(text: text),
   );
 }
 
-class TextDailog extends StatelessWidget {
-  const TextDailog({super.key, required this.text});
+class TextDialog extends StatelessWidget {
+  const TextDialog({super.key, required this.text});
   final String? text;
 
   @override

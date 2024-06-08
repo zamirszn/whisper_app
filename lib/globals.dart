@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:whisper/services/database_helper.dart';
 
 Color appColor1 = Colors.green;
 String? selectedLanguage;
 
 String appName = "Whisper";
+
+int maxtoken = 100;
+
+const String usageTipsText = """
+Tip for Best Results:
+
+Speak Clearly and Audibly: Ensure your voice is clear and at a reasonable volume for the best transcription accuracy.\n
+Select the Correct Language: Choosing the right language for your speech enhances the transcription quality significantly.
+
+""";
+
+List<String> transcribedTexts = [];
+
+final DatabaseHelper databaseHelper = DatabaseHelper.instance;
 
 final List<Map<String, String>> languages = [
   {'name': 'Afrikaans', 'code': 'af'},

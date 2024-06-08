@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/widgets/history_page.dart';
+import 'package:whisper/widgets/text_dialog.dart';
 import 'package:whisper/widgets/voice_page.dart';
 
 class BottomNav extends StatefulWidget {
@@ -11,6 +13,34 @@ class BottomNav extends StatefulWidget {
 }
 
 class BottomNavState extends State<BottomNav> {
+  @override
+  void initState() {
+    _initializeDatabase();
+    checkIsTipsShown();
+
+    super.initState();
+  }
+
+  void _initializeDatabase() async {
+    await databaseHelper.database; // Ensure the database is initialized
+  }
+
+  void checkIsTipsShown() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isOnboardingDone = prefs.getBool('onboardingDone');
+    if (isOnboardingDone == null || isOnboardingDone == false) {
+      showUsageTips();
+    }
+
+    await prefs.setBool('onboardingDone', true);
+  }
+
+  void showUsageTips() async {
+    if (mounted) {
+      showTextDialog(context, usageTipsText);
+    }
+  }
+
   int _currentIndex = 0;
 
   final List<Widget> _children = const [
@@ -24,6 +54,13 @@ class BottomNavState extends State<BottomNav> {
       appBar: AppBar(
         title: Text(appName),
         centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: () {
+                showUsageTips();
+              },
+              icon: const Icon(Icons.info))
+        ],
       ),
       body: _children[_currentIndex],
       bottomNavigationBar: NavigationBar(

@@ -93,8 +93,7 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
         builder: (context) => const BottomNav(),
       ),
     );
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboardingDone', true);
+    
 
     
   }
