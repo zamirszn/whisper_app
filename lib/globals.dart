@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-Color appColor1 = Colors.blue;
+Color appColor1 = Colors.green;
 String? selectedLanguage;
 
 String appName = "Whisper";

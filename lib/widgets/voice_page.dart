@@ -2,12 +2,13 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/services/api_response.dart';
-import 'package:whisper/services/whisper_service.dart';
+import 'package:whisper/services/open_ai_service.dart';
 import 'package:whisper/widgets/audio_recorder_widget.dart';
 import 'package:whisper/widgets/fail_dialog.dart';
 import 'package:whisper/widgets/language_selector.dart';
 import 'package:whisper/widgets/player_widget.dart';
 import 'package:whisper/widgets/ripple_effect_widget.dart';
+import 'package:whisper/widgets/text_dialog.dart';
 
 class VoicePage extends StatefulWidget {
   const VoicePage({super.key});
@@ -42,6 +43,7 @@ class _VoicePageState extends State<VoicePage> {
   List<String> transcribedTexts = [];
   @override
   Widget build(BuildContext context) {
+    Size deviceSize = MediaQuery.of(context).size;
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -83,20 +85,22 @@ class _VoicePageState extends State<VoicePage> {
                 child: ColoredBox(
                   color: appColor1.withOpacity(.1),
                   child: SizedBox(
-                    // height: 400,
+                    height: deviceSize.height / 2.3,
                     child: ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       itemCount: transcribedTexts.length,
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 10),
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           child: AnimatedTextKit(
                               isRepeatingAnimation: false,
                               animatedTexts: [
                                 TyperAnimatedText(transcribedTexts[index],
-                                    textStyle: const TextStyle(fontSize: 20))
+                                    textStyle: const TextStyle(fontSize: 17))
                               ]),
                         );
                       },
@@ -111,33 +115,63 @@ class _VoicePageState extends State<VoicePage> {
               child: PlayerWidget(
                 source: audioPath!,
                 onDelete: () {
-                  setState(() => showPlayer = false);
+                  reset();
                 },
               ),
             ),
           // if (showPlayer == false)
-          AudioRecorder(
-            onStart: () {
-              setState(() => showPlayer = false);
-            },
-            onAmplitudeChanged: (amplitude) {
-              currentAmplitude = amplitude;
-            },
-            onStop: (path) {
-              setState(() {
-                audioPath = path;
-                showPlayer = true;
-              });
-              connectToWhisper(audioPath!, context);
-            },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              AudioRecorder(
+                onStart: () {
+                  setState(() => showPlayer = false);
+                },
+                onAmplitudeChanged: (amplitude) {
+                  currentAmplitude = amplitude;
+                },
+                onStop: (path) {
+                  setState(() {
+                    audioPath = path;
+                    showPlayer = true;
+                  });
+                  connectToWhisper(audioPath!, context);
+                },
+              ),
+              if (transcribedTexts.isNotEmpty)
+                ElevatedButton(
+                  onPressed: () {
+                    summarize(context);
+                  },
+                  child: const Text(
+                    "Summarize",
+                  ),
+                )
+            ],
           ),
         ],
       ),
     );
   }
 
+  void reset() {
+    showPlayer = false;
+    transcribedTexts.clear();
+    lastTranscribedText = null;
+    setState(() {});
+  }
+
   void connectToWhisper(String audio, context) async {
     var response = await sendAudio(audio);
+    if (response is Success && response.message != null) {
+      correctGrammer(response.message!, context);
+    } else if (response is Failure) {
+      showFailDialog(context, response.message);
+    }
+  }
+
+  void correctGrammer(String text, context) async {
+    var response = await checkGrammer(text);
     if (response is Success) {
       lastTranscribedText = response.message;
       if (lastTranscribedText != null) {
@@ -146,6 +180,15 @@ class _VoicePageState extends State<VoicePage> {
       setState(() {});
     } else if (response is Failure) {
       showFailDialog(context, response.message);
+    }
+  }
+
+  void summarize(context) async {
+    String allTexts = transcribedTexts.join(' ');
+    var response = await summarizeConversation(allTexts);
+
+    if (response is Success) {
+      showTextDialog(context, response.message ?? "");
     }
   }
 }
