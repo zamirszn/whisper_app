@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:whisper/globals.dart';
+import 'package:whisper/widgets/fail_dialog.dart';
 
 class AudioRecorder extends StatefulWidget {
   final void Function(String path) onStop;
@@ -11,7 +12,10 @@ class AudioRecorder extends StatefulWidget {
   final void Function(double amplitude) onAmplitudeChanged;
 
   const AudioRecorder(
-      {super.key, required this.onStop, required this.onAmplitudeChanged, required this.onStart});
+      {super.key,
+      required this.onStop,
+      required this.onAmplitudeChanged,
+      required this.onStart});
 
   @override
   State<AudioRecorder> createState() => _AudioRecorderState();
@@ -25,7 +29,6 @@ class _AudioRecorderState extends State<AudioRecorder> {
   RecordState _recordState = RecordState.stop;
   StreamSubscription<Amplitude>? _amplitudeSub;
   // Amplitude? _amplitude;
-  double? _amplitude;
 
   @override
   void initState() {
@@ -60,6 +63,11 @@ class _AudioRecorderState extends State<AudioRecorder> {
         _recordDuration = 0;
 
         _startTimer();
+      } else {
+        if (mounted) {
+          showFailDialog(
+              context, "Please grant audio record permission in settings");
+        }
       }
     } catch (e) {
       if (kDebugMode) {

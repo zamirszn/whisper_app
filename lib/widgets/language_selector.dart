@@ -37,6 +37,7 @@ class LanguageSelectorState extends State<LanguageSelector> {
   @override
   Widget build(BuildContext context) {
     return DropdownButton<String>(
+    borderRadius: BorderRadius.circular(10),
       value: selectedLanguage,
       underline: const SizedBox.shrink(),
       onChanged: (newValue) {

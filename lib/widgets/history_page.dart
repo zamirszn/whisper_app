@@ -35,7 +35,13 @@ class _HistoryPageState extends State<HistoryPage> {
         itemCount: dbTranscriptList.length,
         gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2),
-        itemBuilder: (context, index) => Container(
+        itemBuilder: (context, index) {
+          if (dbTranscriptList.isEmpty) {
+            return const Center(child: Text("No transcription history"));
+          } else {
+            int historyId = dbTranscriptList[index]['id'];
+            String historyText = dbTranscriptList[index]["content"];
+            return Container(
               decoration: BoxDecoration(
                   color: appColor1.withOpacity(.1),
                   borderRadius: BorderRadius.circular(10)),
@@ -63,8 +69,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       ),
                       IconButton(
                         onPressed: () {
-                          ShareIt.text(
-                              content: dbTranscriptList[index]["content"]);
+                          ShareIt.text(content: historyText);
                         },
                         icon: const Icon(
                           Icons.share,
@@ -73,7 +78,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       ),
                       IconButton(
                         onPressed: () {
-                          _deleteText(dbTranscriptList[index]['id']);
+                          _deleteText(historyId);
                           dbTranscriptList.removeAt(index);
                           setState(() {});
                         },
@@ -86,6 +91,8 @@ class _HistoryPageState extends State<HistoryPage> {
                   ),
                 ],
               ),
-            ));
+            );
+          }
+        });
   }
 }
