@@ -1,6 +1,6 @@
 import 'package:dart_openai/dart_openai.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/onboarding/onboarding_screen.dart';
@@ -10,11 +10,11 @@ void main() async {
   // Ensure all widgets are initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
   try {
-    await dotenv.load(fileName: ".env");
-    String? whisperApiKey = dotenv.env["WHISPERKEY"];
-    OpenAI.apiKey = whisperApiKey ?? "";
+    // load whisper key from env
+    OpenAI.apiKey = const String.fromEnvironment('WHISPERKEY');
+    
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     selectedLanguage =
         prefs.getString('selectedLanguage') ?? 'en'; // Default language code
@@ -48,7 +48,7 @@ class CheckOnboarding extends StatefulWidget {
 
   @override
   State<CheckOnboarding> createState() => _CheckOnboardingState();
-} 
+}
 
 class _CheckOnboardingState extends State<CheckOnboarding> {
   @override

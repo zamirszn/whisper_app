@@ -19,7 +19,7 @@ class TextDialog extends StatelessWidget {
       backgroundColor: Colors.white,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-        child: Text(
+        child: SelectableText(
           text ?? "",
         ),
       ),

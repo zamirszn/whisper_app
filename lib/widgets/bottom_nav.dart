@@ -17,7 +17,6 @@ class BottomNavState extends State<BottomNav> {
   void initState() {
     _initializeDatabase();
     checkIsTipsShown();
-
     super.initState();
   }
 
@@ -62,7 +61,10 @@ class BottomNavState extends State<BottomNav> {
               icon: const Icon(Icons.info))
         ],
       ),
-      body: _children[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _children,
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {

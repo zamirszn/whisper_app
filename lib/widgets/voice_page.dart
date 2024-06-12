@@ -1,4 +1,3 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/services/api_response.dart';
@@ -25,12 +24,36 @@ class _VoicePageState extends State<VoicePage> {
 
   String? lastTranscribedText;
 
+  bool _firstAutoscrollExecuted = false;
+  bool _shouldAutoscroll = false;
+
+  void _scrollListener() {
+    _firstAutoscrollExecuted = true;
+
+    if (_scrollController.hasClients &&
+        _scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent) {
+      _shouldAutoscroll = true;
+    } else {
+      _shouldAutoscroll = false;
+    }
+  }
+
   @override
   void initState() {
     showPlayer = false;
+    _scrollController.addListener(_scrollListener);
 
     super.initState();
   }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    super.dispose();
+  }
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +99,8 @@ class _VoicePageState extends State<VoicePage> {
                   child: SizedBox(
                     height: deviceSize.height / 2.3,
                     child: ListView.builder(
-                      physics: const BouncingScrollPhysics(),
+                      controller: _scrollController,
+                      // physics: const BouncingScrollPhysics(),
                       shrinkWrap: true,
                       itemCount: transcribedTexts.length,
                       itemBuilder: (context, index) {
@@ -85,12 +109,17 @@ class _VoicePageState extends State<VoicePage> {
                             horizontal: 10,
                             vertical: 5,
                           ),
-                          child: AnimatedTextKit(
-                              isRepeatingAnimation: false,
-                              animatedTexts: [
-                                TyperAnimatedText(transcribedTexts[index],
-                                    textStyle: const TextStyle(fontSize: 17))
-                              ]),
+                          child: SelectableText(transcribedTexts[index],
+                              style: const TextStyle(fontSize: 17)
+
+                              // AnimatedTextKit(
+                              //     isRepeatingAnimation: false,
+                              //     animatedTexts: [
+                              //       TyperAnimatedText(transcribedTexts[index],
+                              //           textStyle:
+                              //               const TextStyle(fontSize: 17))
+                              //     ]),
+                              ),
                         );
                       },
                     ),
@@ -143,6 +172,18 @@ class _VoicePageState extends State<VoicePage> {
     );
   }
 
+  void jumpToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController
+          .jumpTo(_scrollController.position.maxScrollExtent + 100);
+      // _scrollController.animateTo(
+      //   _scrollController.position.maxScrollExtent,
+      //   curve: Curves.easeOut,
+      //   duration: const Duration(milliseconds: 500),
+      // );
+    }
+  }
+
   void reset() {
     showPlayer = false;
     transcribedTexts.clear();
@@ -168,6 +209,7 @@ class _VoicePageState extends State<VoicePage> {
       }
       saveTranscription(text);
       setState(() {});
+      jumpToBottom();
     } else if (response is Failure) {
       showFailDialog(context, response.message);
     }

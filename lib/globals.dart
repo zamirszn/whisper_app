@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:whisper/services/database_helper.dart';
 
+
+void showTopSnackBar(BuildContext context, String message) {
+  final snackBar = SnackBar(
+    content: Text(message),
+    backgroundColor: Colors.green,
+    behavior: SnackBarBehavior.floating,
+    margin: EdgeInsets.only(top: 40, left: 20, right: 20), // Adjust the top margin to position it below the app bar
+  );
+
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+}
+
 Color appColor1 = Colors.green;
 String? selectedLanguage;
 
