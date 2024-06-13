@@ -5,11 +5,10 @@ import 'package:whisper/onboarding/liquid_swipe_data.dart';
 import 'package:whisper/onboarding/liquid_swipe_handle.dart';
 import 'package:whisper/onboarding/liquid_swiper_clipper.dart';
 
-
 class LiquidSwipe extends StatefulWidget {
   /// Draws an interactive liquid swipe flow whose children
   /// are clipped and transitioned when swiping or tapping the handle.
-  const LiquidSwipe({Key? key, this.children}) : super(key: key);
+  const LiquidSwipe({super.key, this.children});
 
   /// The pages to display.
   final List<Widget>? children;
@@ -83,15 +82,14 @@ class LiquidSwipeState extends State<LiquidSwipe>
 
   @override
   void initState() {
-    _controller ??= AnimationController(vsync: this);
-
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
     _controller?.addListener(() {
       setState(() {
         _dragOffset = _animation?.value;
       });
     });
-
-    super.initState();
   }
 
   @override

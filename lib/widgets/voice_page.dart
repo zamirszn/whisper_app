@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:whisper/globals.dart';
+import 'package:whisper/providers/history_provider.dart';
 import 'package:whisper/services/api_response.dart';
 import 'package:whisper/services/database_helper.dart';
 import 'package:whisper/services/open_ai_service.dart';
 import 'package:whisper/widgets/audio_recorder_widget.dart';
 import 'package:whisper/widgets/fail_dialog.dart';
+import 'package:whisper/widgets/history_page.dart';
 import 'package:whisper/widgets/language_selector.dart';
 import 'package:whisper/widgets/player_widget.dart';
 import 'package:whisper/widgets/ripple_effect_widget.dart';
@@ -207,7 +210,7 @@ class _VoicePageState extends State<VoicePage> {
       if (lastTranscribedText != null) {
         transcribedTexts.add(lastTranscribedText!);
       }
-      saveTranscription(text);
+      saveToDb(text);
       setState(() {});
       jumpToBottom();
     } else if (response is Failure) {
@@ -224,7 +227,8 @@ class _VoicePageState extends State<VoicePage> {
     }
   }
 
-  void saveTranscription(String text) async {
-    await databaseHelper.add(text);
+  void saveToDb(String text) async {
+    Provider.of<HistoryProvider>(context, listen: false)
+        .saveTranscription(text);
   }
 }

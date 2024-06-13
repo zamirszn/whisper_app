@@ -1,9 +1,11 @@
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/onboarding/onboarding_screen.dart';
+import 'package:whisper/providers/history_provider.dart';
 import 'package:whisper/widgets/bottom_nav.dart';
 
 void main() async {
@@ -30,15 +32,23 @@ class WhisperApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: appName,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: "PulpDisplay",
-        colorScheme: ColorScheme.fromSeed(seedColor: appColor1),
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+         ChangeNotifierProvider(
+    create: (context, ) => HistoryProvider(),
+  ),
+      ],
+
+      child: MaterialApp(
+        title: appName,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: "PulpDisplay",
+          colorScheme: ColorScheme.fromSeed(seedColor: appColor1),
+          useMaterial3: true,
+        ),
+        home: const CheckOnboarding(), // Set CheckOnboarding as the home widget
       ),
-      home: const CheckOnboarding(), // Set CheckOnboarding as the home widget
     );
   }
 }

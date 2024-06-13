@@ -1,6 +1,3 @@
-
-
-
 import 'package:flutter/material.dart';
 
 class LiquidSwipeHandle extends StatelessWidget {
@@ -8,10 +5,10 @@ class LiquidSwipeHandle extends StatelessWidget {
   /// that has a right chevron and an [InkWell] based
   /// tap handler.
   const LiquidSwipeHandle({
-    Key? key,
+    super.key,
     required this.diameter,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   /// The diameter of the handle
   final double diameter;

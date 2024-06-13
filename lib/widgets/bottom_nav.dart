@@ -51,7 +51,10 @@ class BottomNavState extends State<BottomNav> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(appName),
+        title: Text(
+          appName,
+        ),
+        forceMaterialTransparency: true,
         centerTitle: true,
         actions: [
           IconButton(

@@ -18,14 +18,16 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
 
   LiquidSwipeState? get liquidSwipeController => _key.currentState;
 
-  bool isLastPage = false;
-  final controller = PageController();
-
   @override
-  void dispose() {
-    controller.dispose();
+  void initState() {
+    resetAnim();
+    super.initState();
+  }
 
-    super.dispose();
+  resetAnim() async {
+    Future.delayed(const Duration(milliseconds: 50)).then(
+      (value) => liquidSwipeController?.previous(),
+    );
   }
 
   @override
@@ -36,7 +38,7 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
         children: [
           /// First page
           LiquidSwipeCard(
-            onTapName: () {},
+            onTapName: () => liquidSwipeController?.previous(),
             onSkip: () async {
               goHome();
             },
@@ -71,7 +73,7 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
             body:
                 "Our innovative speech-to-text solution offers precise and real-time transcription",
             buttonColor: Colors.white,
-            titleColor: Colors.grey.shade500,
+            titleColor: Colors.black,
             subtitleColor: Colors.grey.shade200,
             bodyColor: Colors.white.withOpacity(0.8),
             gradient: LinearGradient(
@@ -93,8 +95,5 @@ class _LiquidSwipeOnboardingState extends State<LiquidSwipeOnboarding> {
         builder: (context) => const BottomNav(),
       ),
     );
-    
-
-    
   }
 }
