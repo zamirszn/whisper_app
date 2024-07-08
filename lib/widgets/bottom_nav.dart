@@ -28,17 +28,16 @@ class BottomNavState extends State<BottomNav> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? isOnboardingDone = prefs.getBool('onboardingDone');
     if (isOnboardingDone == null || isOnboardingDone == false) {
-      showUsageTips();
+      if (mounted) {
+        showTextDialog(context, usageTipsText);
+      }
+      ();
     }
 
     await prefs.setBool('onboardingDone', true);
   }
 
-  void showUsageTips() async {
-    if (mounted) {
-      showTextDialog(context, usageTipsText);
-    }
-  }
+  
 
   int _currentIndex = 0;
 
@@ -50,20 +49,7 @@ class BottomNavState extends State<BottomNav> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          appName,
-        ),
-        forceMaterialTransparency: true,
-        centerTitle: true,
-        actions: [
-          IconButton(
-              onPressed: () {
-                showUsageTips();
-              },
-              icon: const Icon(Icons.info))
-        ],
-      ),
+     
       body: IndexedStack(
         index: _currentIndex,
         children: _children,
@@ -76,9 +62,10 @@ class BottomNavState extends State<BottomNav> {
           });
         },
         destinations: const [
+         
           NavigationDestination(
-            icon: Icon(Icons.mic),
-            label: 'Voice',
+            icon: Icon(Icons.voice_chat),
+            label: 'Transcription',
           ),
           NavigationDestination(
             icon: Icon(Icons.history),

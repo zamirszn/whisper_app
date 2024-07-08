@@ -1,5 +1,37 @@
+import 'package:deepgram_speech_to_text/deepgram_speech_to_text.dart';
 import 'package:flutter/material.dart';
 import 'package:whisper/services/database_helper.dart';
+import 'package:whisper/widgets/text_dialog.dart';
+
+int maxTextLength = 200;
+
+extension StringExtension on String {
+  String toPascalCase() {
+    if (isEmpty) {
+      return '';
+    }
+    return '${this[0].toUpperCase()}${substring(1)}';
+  }
+}
+
+String formatRecordTime(int number) {
+  String numberStr = number.toString();
+  if (number < 10) {
+    numberStr = '0$numberStr';
+  }
+
+  return numberStr;
+}
+
+Map<String, dynamic> params = {
+  'model': 'nova-2-general',
+  'detect_language': true,
+  'filler_words': false,
+  'punctuation': true,
+};
+
+Deepgram deepgram = Deepgram(const String.fromEnvironment('DEEPGRAMAPIKEY'),
+    baseQueryParams: params);
 
 void showTopSnackBar(BuildContext context, String message) {
   final snackBar = SnackBar(
@@ -18,19 +50,15 @@ void showTopSnackBar(BuildContext context, String message) {
 Color appColor1 = Colors.green;
 String? selectedLanguage;
 
-String appName = "Whisper";
+String appName = "Transcription";
 
 int maxtoken = 100;
 
 const String usageTipsText = """
 Tip for Best Results:
 
-Speak Clearly and Audibly: Ensure your voice is clear and at a reasonable volume for the best transcription accuracy.\n
-Select the Correct Language: Choosing the right language for your speech enhances the transcription quality significantly.
-
+Speak Clearly and Audibly: Ensure your voice is clear and at a reasonable volume for the best transcription accuracy.
 """;
-
-List<String> transcribedTexts = [];
 
 final DatabaseHelper databaseHelper = DatabaseHelper.instance;
 

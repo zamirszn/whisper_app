@@ -45,6 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>Permission required to record audio for speech recognition.</string>
+
+
 
 	<key>NSMicrophoneUsageDescription</key>
 <string>We need access to the microphone to record audio.</string>

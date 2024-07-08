@@ -15,9 +15,16 @@ class TextDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
+    return AlertDialog(
       backgroundColor: Colors.white,
-      child: Padding(
+      actions: [
+        TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("Ok"))
+      ],
+      content: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child: SelectableText(
           text ?? "",

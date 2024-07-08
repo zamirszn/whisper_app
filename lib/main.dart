@@ -1,4 +1,3 @@
-import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,23 +11,13 @@ void main() async {
   // Ensure all widgets are initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    // load whisper key from env
-    OpenAI.apiKey = const String.fromEnvironment('WHISPERKEY');
-    
+  
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    selectedLanguage =
-        prefs.getString('selectedLanguage') ?? 'en'; // Default language code
-  } catch (e) {
-    print(e);
-  }
-
-  runApp(const WhisperApp());
+  runApp(const TranscriptionApp());
 }
 
-class WhisperApp extends StatelessWidget {
-  const WhisperApp({super.key});
+class TranscriptionApp extends StatelessWidget {
+  const TranscriptionApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +29,11 @@ class WhisperApp extends StatelessWidget {
       ],
 
       child: MaterialApp(
+        
         title: appName,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
+          
           fontFamily: "PulpDisplay",
           colorScheme: ColorScheme.fromSeed(seedColor: appColor1),
           useMaterial3: true,

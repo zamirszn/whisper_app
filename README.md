@@ -13,7 +13,7 @@ to run debug create a `launch.json` file:
         "program": "lib/main.dart",
         "args": [
           "--dart-define",
-          "WHISPERKEY=your_api_key_here"
+          "DEEPGRAMAPIKEY=your_api_key_here"
         ]
       }
     ]
@@ -29,18 +29,18 @@ then add `launch.json` to your `gitignore` file
 
 To build release for Android run :
 
-`flutter build apk --dart-define=WHISPERKEY=your_api_key_here
+`flutter build apk --dart-define=DEEPGRAMAPIKEY=your_api_key_here
 `
 
 To build release for iOS run :
 
-`flutter build ios --dart-define=WHISPERKEY=your_api_key_here`
+`flutter build ios --dart-define=DEEPGRAMAPIKEY=your_api_key_here`
 
 To build using CI/CD e.g CodeMagic:
 
-add `--dart-define=WHISPERKEY=your_api_key_here` to build argument
+add `--dart-define=DEEPGRAMAPIKEY=your_api_key_here` to build argument
 
-`WHISPERKEY` is not commited to github or stored in code for security reasons
+`DEEPGRAMAPIKEY` is not commited to github or stored in code for security reasons
 
 
 
