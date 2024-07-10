@@ -1,7 +1,6 @@
 import 'package:deepgram_speech_to_text/deepgram_speech_to_text.dart';
 import 'package:flutter/material.dart';
 import 'package:whisper/services/database_helper.dart';
-import 'package:whisper/widgets/text_dialog.dart';
 
 int maxTextLength = 200;
 

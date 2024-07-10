@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/onboarding/liquid_card_swipe.dart';
 import 'package:whisper/onboarding/liquid_swipe_view.dart';
 import 'package:whisper/widgets/bottom_nav.dart';
-import 'package:whisper/widgets/voice_page.dart';
 
 class LiquidSwipeOnboarding extends StatefulWidget {
   const LiquidSwipeOnboarding({super.key});

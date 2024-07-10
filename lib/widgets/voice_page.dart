@@ -1,23 +1,18 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 // import 'package:audioplayers/audioplayers.dart';
 import 'package:deepgram_speech_to_text/deepgram_speech_to_text.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
-import 'package:whisper/audio_util.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/providers/history_provider.dart';
 import 'package:whisper/providers/timer_provider.dart';
 import 'package:whisper/providers/transcription_provider.dart';
 import 'package:whisper/services/deep_gram_service.dart';
 import 'package:whisper/widgets/fail_dialog.dart';
-import 'package:whisper/widgets/player_widget.dart';
 import 'package:whisper/widgets/ripple_effect_widget.dart';
 import 'package:whisper/widgets/text_dialog.dart';
 import 'package:whisper/widgets/recorder_widget.dart';
@@ -39,14 +34,12 @@ class _VoicePageState extends State<VoicePage> {
 
   @override
   void initState() {
-    _scrollController.addListener(_scrollListenerMethod);
     _recordSub = mic.onStateChanged().listen((recordState) {
       setState(() => _recordState = recordState);
     });
 
     super.initState();
   }
-
 
   RecordState _recordState = RecordState.stop;
 
@@ -57,8 +50,7 @@ class _VoicePageState extends State<VoicePage> {
 
   List<int> audioChunkBuffer = [];
 
-
-void handleListenEvent(Uint8List data) {
+  void handleListenEvent(Uint8List data) {
     // Convert Uint8List to List<int>
     List<int> audioBuffer = data.toList();
 
@@ -78,10 +70,7 @@ void handleListenEvent(Uint8List data) {
     );
 
     audioStream.listen(
-      (Uint8List audioInUint8List) {
-        handleListenEvent(audioInUint8List);
-
-      },
+      (Uint8List audioInUint8List) {},
       onDone: () {},
       onError: (error) {
         if (kDebugMode) {
@@ -105,7 +94,7 @@ void handleListenEvent(Uint8List data) {
         (res) {
           Provider.of<TranscriptionProvider>(context, listen: false)
               .updateText("${res.transcript} ");
-          jumpToBottom();
+          jumpToButtom();
         },
         cancelOnError: true,
         onError: (error) {
@@ -119,10 +108,7 @@ void handleListenEvent(Uint8List data) {
     }
   }
 
-  bool showPlayer = false;
-
   void stopStream() async {
-    showPlayer = true;
     await mic.stop();
     saveLastTranscriptToDB();
   }
@@ -147,37 +133,20 @@ void handleListenEvent(Uint8List data) {
   @override
   void dispose() {
     Provider.of<TimerProvider>(context, listen: false).stopTimer();
-    _scrollController.removeListener(_scrollListenerMethod);
     _recordSub?.cancel();
     mic.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  bool firstAutoscrollExecuted = false;
-  bool shouldAutoscroll = false;
   final ScrollController _scrollController = ScrollController();
 
-  void jumpToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent + 150,
-        duration: const Duration(seconds: 2),
-        curve: Curves.fastOutSlowIn,
-      );
-    }
-  }
-
-  void _scrollListenerMethod() {
-    firstAutoscrollExecuted = true;
-
-    if (_scrollController.hasClients &&
-        _scrollController.position.pixels ==
-            _scrollController.position.maxScrollExtent) {
-      shouldAutoscroll = true;
-    } else {
-      shouldAutoscroll = false;
-    }
-    print(_scrollController);
+  void jumpToButtom() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.fastOutSlowIn,
+    );
   }
 
   @override
@@ -194,7 +163,12 @@ void handleListenEvent(Uint8List data) {
         actions: [
           IconButton(
               onPressed: () {
-                showTextDialog(context, usageTipsText);
+                Provider.of<TranscriptionProvider>(context, listen: false)
+                    .updateText(
+                        "More more more text More more more textMore more more textMore more more textMore more more text ");
+                jumpToButtom();
+
+                // showTextDialog(context, usageTipsText);
               },
               icon: const Icon(Icons.info))
         ],
@@ -218,7 +192,7 @@ void handleListenEvent(Uint8List data) {
                     child: ColoredBox(
                       color: appColor1.withOpacity(.1),
                       child: SizedBox(
-                          height: deviceSize.height / 2,
+                          height: deviceSize.height / 1.8,
                           width: deviceSize.width / 1.2,
                           child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -228,7 +202,9 @@ void handleListenEvent(Uint8List data) {
                               child: SingleChildScrollView(
                                 controller: _scrollController,
                                 child: SelectableText(
-                                    state.transcriptionText.toPascalCase()),
+                                  state.transcriptionText.toPascalCase(),
+                                  style: const TextStyle(fontSize: 20),
+                                ),
                               ))),
                     ),
                   ),
@@ -258,17 +234,6 @@ void handleListenEvent(Uint8List data) {
                   ],
                 ),
               ),
-
-              if (showPlayer == true)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: PlayerWidget(
-                    audioByteData: audioChunkBuffer,
-                    onReset: () {
-                      reset();
-                    },
-                  ),
-                ),
 
               //recorder widget
 
@@ -323,7 +288,6 @@ void handleListenEvent(Uint8List data) {
         .clearTranscription();
 
     Provider.of<TimerProvider>(context, listen: false).stopTimer();
-    showPlayer = false;
     audioChunkBuffer.clear();
   }
 }
