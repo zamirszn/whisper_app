@@ -29,7 +29,6 @@ class RipplesState extends State<Ripples> with SingleTickerProviderStateMixin {
 
   void updateAnimationDuration(Duration duration) {
     _controller.duration = duration;
-    print(_controller.duration);
   }
 
   @override

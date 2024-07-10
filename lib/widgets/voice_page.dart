@@ -10,13 +10,18 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
+import 'package:whisper/audio_util.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/providers/history_provider.dart';
+import 'package:whisper/providers/timer_provider.dart';
+import 'package:whisper/providers/transcription_provider.dart';
+import 'package:whisper/services/deep_gram_service.dart';
 import 'package:whisper/widgets/fail_dialog.dart';
 import 'package:whisper/widgets/player_widget.dart';
 import 'package:whisper/widgets/ripple_effect_widget.dart';
 import 'package:whisper/widgets/text_dialog.dart';
-import 'package:http/http.dart' as http;
+import 'package:whisper/widgets/recorder_widget.dart';
+import 'package:whisper/widgets/timer_widget.dart';
 
 class VoicePage extends StatefulWidget {
   const VoicePage({super.key});
@@ -26,18 +31,23 @@ class VoicePage extends StatefulWidget {
 }
 
 class _VoicePageState extends State<VoicePage> {
-  bool showPlayer = false;
+  @override
+  void setState(fn) {
+    print("calling setState");
+    if (mounted) super.setState(fn);
+  }
 
   @override
   void initState() {
-    _scrollController.addListener(_scrollListener);
+    _scrollController.addListener(_scrollListenerMethod);
     _recordSub = mic.onStateChanged().listen((recordState) {
       setState(() => _recordState = recordState);
     });
+
     super.initState();
   }
 
-  String? audioPath;
+
   RecordState _recordState = RecordState.stop;
 
   Stream<DeepgramSttResult>? stream;
@@ -45,10 +55,16 @@ class _VoicePageState extends State<VoicePage> {
   AudioRecorder mic = AudioRecorder();
   StreamSubscription<RecordState>? _recordSub;
 
-  final StreamController<Uint8List> audioStreamController =
-      StreamController<Uint8List>();
+  List<int> audioChunkBuffer = [];
 
-  // Collect the audio data in a list
+
+void handleListenEvent(Uint8List data) {
+    // Convert Uint8List to List<int>
+    List<int> audioBuffer = data.toList();
+
+    // Now you can use audioBuffer as needed
+    audioChunkBuffer.addAll(audioBuffer);
+  }
 
   void startStream() async {
     await mic.hasPermission();
@@ -61,26 +77,18 @@ class _VoicePageState extends State<VoicePage> {
       ),
     );
 
-    List<Uint8List> audioDataChunk = [];
+    audioStream.listen(
+      (Uint8List audioInUint8List) {
+        handleListenEvent(audioInUint8List);
 
-    // audioStream.listen(
-    //   (audioInUint8List) {
-    //     audioDataChunk.add(audioInUint8List);
-    //   },
-    //   onDone: () {
-    //     // When the stream is closed, close the controller
-    //     audioStreamController.close();
-    //     // now lets process the audio stream data
-    //     // processAndSaveAudio(audioDataChunk);
-    //   },
-    //   onError: (error) {
-    //     // Handle any errors
-    //     if (kDebugMode) {
-    //       print('Error: $error');
-    //     }
-    //     audioStreamController.close();
-    //   },
-    // );
+      },
+      onDone: () {},
+      onError: (error) {
+        if (kDebugMode) {
+          print('Error: $error');
+        }
+      },
+    );
 
     final Map<String, Object> liveParams = {
       'detect_language': false, // not supported by streaming API
@@ -95,54 +103,23 @@ class _VoicePageState extends State<VoicePage> {
 
     stream?.listen(
         (res) {
-          transcriptionText += "${res.transcript} ";
-
-          if (mounted) {
-            setState(() {});
-          }
-
+          Provider.of<TranscriptionProvider>(context, listen: false)
+              .updateText("${res.transcript} ");
           jumpToBottom();
         },
         cancelOnError: true,
         onError: (error) {
-          print("${error}here");
           if (mounted) {
             showFailDialog(context, error.toString());
           }
         });
 
-    _startTimer();
-  }
-
-  Future<void> processAndSaveAudio(List<Uint8List> audioChunks) async {
-    // Combine all chunks into a single Uint8List
-    int totalLength =
-        audioChunks.fold<int>(0, (total, chunk) => total + chunk.length);
-    Uint8List combinedData = Uint8List(totalLength);
-    int offset = 0;
-    for (Uint8List chunk in audioChunks) {
-      combinedData.setRange(offset, offset + chunk.length, chunk);
-      offset += chunk.length;
+    if (mounted) {
+      Provider.of<TimerProvider>(context, listen: false).startTimer();
     }
-
-    // Save the audio as a temporary file
-    Directory tempDir = await getApplicationDocumentsDirectory();
-    String tempPath =
-        '${tempDir.path}/recorded_audio.wav'; // Change the extension to match the audio format
-
-    File tempFile = File(tempPath);
-    await tempFile.writeAsBytes(combinedData);
-
-    audioPath = tempPath;
-
-    print('Audio saved to temporary file: $tempPath');
-    setState(() {});
   }
 
-  int _recordDuration = 0;
-  Timer? _timer;
-
-  String transcriptionText = "";
+  bool showPlayer = false;
 
   void stopStream() async {
     showPlayer = true;
@@ -151,40 +128,28 @@ class _VoicePageState extends State<VoicePage> {
   }
 
   Future<void> _pause() async {
-    _timer?.cancel();
+    Provider.of<TimerProvider>(context, listen: false).pauseTimer();
     await mic.pause();
   }
 
   void initStream() {
-    try {
-      startStream();
-    } catch (e) {
-      print(e);
-    }
+    reset();
+    startStream();
   }
 
   Future<void> _resume() async {
-    initStream();
+    startStream();
+    Provider.of<TimerProvider>(context, listen: false).resumeTimer();
 
-    _startTimer();
     await mic.resume();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      setState(() => _recordDuration++);
-    });
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    _timer?.cancel();
+    Provider.of<TimerProvider>(context, listen: false).stopTimer();
+    _scrollController.removeListener(_scrollListenerMethod);
     _recordSub?.cancel();
     mic.dispose();
-    audioStreamController.close();
     super.dispose();
   }
 
@@ -194,12 +159,15 @@ class _VoicePageState extends State<VoicePage> {
 
   void jumpToBottom() {
     if (_scrollController.hasClients) {
-      _scrollController
-          .jumpTo(_scrollController.position.maxScrollExtent + 100);
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent + 150,
+        duration: const Duration(seconds: 2),
+        curve: Curves.fastOutSlowIn,
+      );
     }
   }
 
-  void _scrollListener() {
+  void _scrollListenerMethod() {
     firstAutoscrollExecuted = true;
 
     if (_scrollController.hasClients &&
@@ -209,13 +177,12 @@ class _VoicePageState extends State<VoicePage> {
     } else {
       shouldAutoscroll = false;
     }
+    print(_scrollController);
   }
 
   @override
   Widget build(BuildContext context) {
-    Size deviceSize = MediaQuery.of(context).size;
-    final String minutes = formatRecordTime(_recordDuration ~/ 60);
-    final String seconds = formatRecordTime(_recordDuration % 60);
+    Size deviceSize = MediaQuery.sizeOf(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -233,230 +200,130 @@ class _VoicePageState extends State<VoicePage> {
         ],
       ),
       body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            if (transcriptionText.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Ripples(),
-              ),
-            if (transcriptionText.isNotEmpty)
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: ColoredBox(
-                    color: appColor1.withOpacity(.1),
-                    child: SizedBox(
-                        height: deviceSize.height / 1.9,
-                        width: deviceSize.width / 1.2,
-                        child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5,
-                              vertical: 5,
-                            ),
-                            child: SingleChildScrollView(
-                              controller: _scrollController,
-                              child: SelectableText(
-                                  transcriptionText.toPascalCase()),
-                            ))),
+        child: Consumer<TranscriptionProvider>(builder: (context, state, _) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (state.transcriptionText.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Ripples(),
+                ),
+              if (state.transcriptionText.isNotEmpty)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: ColoredBox(
+                      color: appColor1.withOpacity(.1),
+                      child: SizedBox(
+                          height: deviceSize.height / 2,
+                          width: deviceSize.width / 1.2,
+                          child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 5,
+                              ),
+                              child: SingleChildScrollView(
+                                controller: _scrollController,
+                                child: SelectableText(
+                                    state.transcriptionText.toPascalCase()),
+                              ))),
+                    ),
                   ),
+                ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    if (state.transcriptionText.isNotEmpty &&
+                        _recordState == RecordState.stop)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          if (state.transcriptionText.isNotEmpty)
+                            ElevatedButton(
+                              onPressed: () {
+                                summarizeText(context, state.transcriptionText);
+                              },
+                              child: const Text(
+                                "Summarize",
+                              ),
+                            )
+                        ],
+                      ),
+                  ],
                 ),
               ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  if (showPlayer == true && _recordState == RecordState.stop)
-                    ClipOval(
-                      child: Material(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        child: InkWell(
-                          child: const SizedBox(
-                              width: 56,
-                              height: 56,
-                              child: Icon(Icons.refresh)),
-                          onTap: () {
-                            reset();
-                          },
-                        ),
-                      ),
-                    ),
-                  if (transcriptionText.isNotEmpty &&
-                      _recordState == RecordState.stop)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        if (transcriptionText.isNotEmpty)
-                          ElevatedButton(
-                            onPressed: () {
-                              summarizeText(context);
-                            },
-                            child: const Text(
-                              "Summarize",
-                            ),
-                          )
-                      ],
-                    ),
-                ],
-              ),
-            ),
-
-            //recorder widget
-
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 30),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  ClipOval(
-                    child: Material(
-                      color: _recordState != RecordState.stop
-                          ? Colors.red.withOpacity(0.1)
-                          : Theme.of(context).primaryColor.withOpacity(0.1),
-                      child: InkWell(
-                        child: SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: _recordState != RecordState.stop
-                                ? const Icon(Icons.stop,
-                                    color: Colors.red, size: 30)
-                                : Icon(Icons.mic,
-                                    color: Theme.of(context).primaryColor,
-                                    size: 30)),
-                        onTap: () {
-                          (_recordState != RecordState.stop)
-                              ? stopStream()
-                              : initStream();
-
-                          setState(() {});
-                        },
-                      ),
-                    ),
+              if (showPlayer == true)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: PlayerWidget(
+                    audioByteData: audioChunkBuffer,
+                    onReset: () {
+                      reset();
+                    },
                   ),
-                  const SizedBox(width: 20),
-                  if (_recordState == RecordState.record)
-                    Row(
-                      children: [
-                        ClipOval(
-                          child: Material(
-                            color:
-                                Theme.of(context).primaryColor.withOpacity(0.1),
-                            child: InkWell(
-                              child: const SizedBox(
-                                  width: 56,
-                                  height: 56,
-                                  child: Icon(Icons.pause,
-                                      color: Colors.red, size: 30)),
-                              onTap: () {
-                                _pause();
-                              },
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                      ],
-                    ),
-                  if (_recordState == RecordState.pause)
-                    Row(
-                      children: [
-                        ClipOval(
-                          child: Material(
-                            color:
-                                Theme.of(context).primaryColor.withOpacity(0.1),
-                            child: InkWell(
-                              child: const SizedBox(
-                                  width: 56,
-                                  height: 56,
-                                  child: Icon(Icons.play_arrow,
-                                      color: Colors.green, size: 30)),
-                              onTap: () {
-                                _resume();
-                              },
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                      ],
-                    ),
-                  _recordState != RecordState.stop
-                      ? Text(
-                          '$minutes : $seconds',
-                          style: TextStyle(color: appColor1),
-                        )
-                      : const Text("Tap to speak"),
-                ],
-              ),
-            ),
+                ),
 
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(vertical: 10),
-            //   child: PlayerWidget(
-            //     source: audioPath!,
-            //     onDelete: () {
-            //       reset();
-            //     },
-            //   ),
-            // ),
-          ],
-        ),
+              //recorder widget
+
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    StartStopRecordWidget(
+                      recordState: _recordState,
+                      onTap: () {
+                        _recordState != RecordState.stop
+                            ? stopStream()
+                            : initStream();
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    if (_recordState == RecordState.record)
+                      PauseWidget(
+                        onPause: () => _pause(),
+                      ),
+                    if (_recordState == RecordState.pause)
+                      ResumeWidget(
+                        onResume: () => _resume(),
+                      ),
+                    _recordState != RecordState.stop
+                        ? const TimerWidget()
+                        : const Text("Tap to speak"),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }),
       ),
     );
   }
 
   void saveLastTranscriptToDB() {
-    if (transcriptionText.isNotEmpty) {
+    TranscriptionProvider state =
+        Provider.of<TranscriptionProvider>(context, listen: false);
+    if (state.transcriptionText.isNotEmpty || state.transcriptionText != "") {
       showTopSnackBar(context, "Saving transcription");
 
       Provider.of<HistoryProvider>(context, listen: false)
-          .saveTranscription(transcriptionText);
+          .saveTranscription(state.transcriptionText);
     }
   }
 
   void reset() {
-    transcriptionText = "";
-    _recordDuration = 0;
+    Provider.of<TranscriptionProvider>(context, listen: false)
+        .clearTranscription();
+
+    Provider.of<TimerProvider>(context, listen: false).stopTimer();
     showPlayer = false;
-    setState(() {});
-  }
-
-  Future<void> summarizeText(context) async {
-    if (transcriptionText.isNotEmpty) {
-      const String url =
-          'https://api.deepgram.com/v1/read?summarize=true&language=en';
-      const String token = String.fromEnvironment('DEEPGRAMAPIKEY');
-      String text = transcriptionText;
-
-      try {
-        final response = await http.post(
-          Uri.parse(url),
-          headers: {
-            'Authorization': 'Token $token',
-            'Content-Type': 'application/json',
-          },
-          body: json.encode({'text': text}),
-        );
-
-        if (response.statusCode == 200) {
-          Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-          String summaryText = jsonResponse['results']['summary']['text'];
-          showTextDialog(context, summaryText);
-        } else {
-          showTextDialog(context, 'Error: ${response.reasonPhrase}');
-
-          print('Error: ${response.reasonPhrase}');
-          // Handle error response
-        }
-      } catch (e) {
-        print('Exception caught: $e');
-        showTextDialog(context, 'Exception caught: $e');
-
-        // Handle exceptions
-      }
-    }
+    audioChunkBuffer.clear();
   }
 }

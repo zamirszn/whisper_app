@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/onboarding/onboarding_screen.dart';
 import 'package:whisper/providers/history_provider.dart';
+import 'package:whisper/providers/timer_provider.dart';
+import 'package:whisper/providers/transcription_provider.dart';
 import 'package:whisper/widgets/bottom_nav.dart';
 
 void main() async {
@@ -23,8 +25,24 @@ class TranscriptionApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+
          ChangeNotifierProvider(
-    create: (context, ) => HistoryProvider(),
+          create: (
+            context,
+          ) =>
+              HistoryProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (
+            context,
+          ) =>
+              TimerProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (
+            context,
+          ) =>
+              TranscriptionProvider(),
   ),
       ],
 

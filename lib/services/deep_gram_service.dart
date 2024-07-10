@@ -1,49 +1,47 @@
-// import 'dart:io';
 
-// import 'package:deepgram_speech_to_text/deepgram_speech_to_text.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:whisper/globals.dart';
-// import 'package:whisper/services/api_response.dart';
+import 'dart:convert';
 
-// Future<Object> sendAudio(String filePath) async {
-//   try {
-//     return Success(message: transcription.text);
-//   } catch (e) {
-//     return handleError(e);
-//   }
-// }
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:whisper/widgets/text_dialog.dart';
 
-// Future<Object> checkGrammer(String text) async {
-//   try {
-//     // final completion = await OpenAI.instance.completion.create(
-//     //     model: "gpt-3.5-turbo-instruct",
-//     //     prompt: "Correct the grammar of the following: $text",
-//     //     maxTokens: maxtoken);
 
-//     return Success(message: completion.choices.first.text.trim());
-//   } catch (e) {
-//     return handleError(e);
-//   }
-// }
+Future<void> summarizeText(context, String transcriptionText) async {
+  if (transcriptionText.isNotEmpty) {
+    const String url =
+        'https://api.deepgram.com/v1/read?summarize=true&language=en';
+    const String token = String.fromEnvironment('DEEPGRAMAPIKEY');
+    String text = transcriptionText;
 
-// Future<Object> summarizeConversation(String text) async {
-//   try {
-//     // final completion = await OpenAI.instance.completion.create(
-//     //     model: "gpt-3.5-turbo-instruct",
-//     //     prompt: 'Summarize this text: $text',
-//     //     maxTokens: maxtoken);
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'text': text}),
+      );
 
-//     return Success(message: completion.choices.first.text.trim());
-//   } catch (e) {
-//     return handleError(e);
-//   }
-// }
+      if (response.statusCode == 200) {
+        Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+        String summaryText = jsonResponse['results']['summary']['text'];
+        showTextDialog(context, summaryText);
+      } else {
+        showTextDialog(context, 'Error: ${response.reasonPhrase}');
 
-// Failure handleError(Object e) {
-//   if (e is SocketException) {
-//     return Failure(message: "Please check your internet connection");
-//   } else if (e is RequestFailedException) {
-//     return Failure(message: e.message);
-//   }
-//   return Failure(message: e.toString());
-// }
+        if (kDebugMode) {
+          print('Error: ${response.reasonPhrase}');
+        }
+        // Handle error response
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception caught: $e');
+      }
+      showTextDialog(context, 'Exception caught: $e');
+
+      // Handle exceptions
+    }
+  }
+}
