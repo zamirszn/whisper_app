@@ -43,9 +43,15 @@ dependencies:
   deepgram_speech_to_text: ^2.2.1
   http: ^1.2.1
   
-  
-  path: any
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21
+
 dev_dependencies:
+
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
 

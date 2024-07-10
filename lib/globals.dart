@@ -46,7 +46,7 @@ void showTopSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
 
-Color appColor1 = Colors.green;
+Color appColor1 = const Color(0xFF4CAF50);
 String? selectedLanguage;
 
 String appName = "Transcription";
