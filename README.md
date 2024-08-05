@@ -1,28 +1,4 @@
-#whisper
-
-to run debug create a `launch.json` file:
-
-```
-{
-    "version": "0.0.1",
-    "configurations": [
-      {
-        "name": "Flutter",
-        "request": "launch",
-        "type": "dart",
-        "program": "lib/main.dart",
-        "args": [
-          "--dart-define",
-          "DEEPGRAMAPIKEY=your_api_key_here"
-        ]
-      }
-    ]
-  }
-```
-#IMPORTANT
-then add `launch.json` to your `gitignore` file 
-
-
+##Whisper - A realtime voice transcrition app for individuals with disablilities
 
 
 ##RELEASE COMMAND
