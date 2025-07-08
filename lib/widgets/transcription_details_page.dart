@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_it/share_it.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:whisper/globals.dart';
 
 class TranscriptionDetailsPage extends StatelessWidget {
@@ -24,7 +24,7 @@ class TranscriptionDetailsPage extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            ShareIt.text(content: text);
+            SharePlus.instance.share(ShareParams(text: text));
           },
           icon: const Icon(
             Icons.share,

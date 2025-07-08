@@ -11,9 +11,6 @@ import 'package:whisper/widgets/bottom_nav.dart';
 void main() async {
   // Ensure all widgets are initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
-
-  
-
   runApp(const TranscriptionApp());
 }
 
@@ -24,7 +21,6 @@ class TranscriptionApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-
          ChangeNotifierProvider(
           create: (
             context,

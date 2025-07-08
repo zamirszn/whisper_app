@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
-import 'package:share_it/share_it.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:whisper/globals.dart';
 import 'package:whisper/providers/history_provider.dart';
 import 'package:whisper/widgets/text_dialog.dart';
@@ -105,7 +105,8 @@ class _HistoryPageState extends State<HistoryPage> {
                             ),
                             IconButton(
                               onPressed: () {
-                                ShareIt.text(content: historyText);
+                                SharePlus.instance
+                                    .share(ShareParams(text: historyText));
                               },
                               icon: const Icon(
                                 Icons.share,
